@@ -64,7 +64,7 @@
 
 WebServer server(80);
 WiFiClient tcpClient;
-SoftwareSerial ESPserial(5, 4);
+SoftwareSerial ESPserial(17, 16);
 WiFiClientSecure httpsClient;
 PubSubClient mqttClient(httpsClient);
 
@@ -147,14 +147,18 @@ const char* privateKey = "-----BEGIN RSA PRIVATE KEY-----\n" \
 
 const char ip[] = "10.1.10.253";
 const char url[] = "ioth2o.com";
-const char *APssid = APSSID;
-const char *APpassword = APPSK;
+const String APssid = APSSID;
+const String APpassword = "";
 String UnHtmlForm = "";
 int MemResetPin = 13;
 String form = "";
 String ssidWifi;
 String passwordWifi;
 
+/*****************************************************************************************
+ ********** The following functions are based on memory storage and retrevial*************
+ ****************************************************************************************/
+ 
 String memRead(int l, int p) {
   String temp;
   for (int n = p; n < l + p; ++n)
@@ -195,7 +199,6 @@ boolean validSSID(String S) {
 void memClear(String s, String p) {
   String clearS = "";
   String clearP = "";
-  Serial.println(s.length());
   for (int i = 0; i < s.length(); i++) {
     clearS += (char)0;
   }
@@ -301,8 +304,7 @@ void handleRoot() {
   }
 }
 
-void handleNotFound()
-{
+void handleNotFound() {
   String message = "File Not Found\n\n";
   message += "URI: ";
   message += server.uri();
@@ -318,7 +320,12 @@ void handleNotFound()
 }
 
 void softAPConnect() {
-  WiFi.softAP(APssid, APpassword);
+  char APssidChar[APssid.length()+1];
+  char APpasswordChar[APpassword.length()+1];
+  APssid.toCharArray(APssidChar, APssid.length()+1);
+  APpassword.toCharArray(APpasswordChar, APpassword.length()+1);
+  
+  WiFi.softAP(APssidChar, APpasswordChar);
   Serial.println("");
   Serial.print("Hosting: ");
   Serial.println(APssid);
@@ -332,10 +339,13 @@ void softAPConnect() {
 boolean wifiConnect(String s, String p) {
   WiFi.persistent(false);
 
-  char ssidChar[s.length()];
-  char passChar[p.length()];
-  s.toCharArray(ssidChar, s.length());
-  p.toCharArray(passChar, p.length());
+  char ssidChar[s.length()+1];
+  char passChar[p.length()+1];
+  s.toCharArray(ssidChar, s.length()+1);
+  p.toCharArray(passChar, p.length()+1);
+
+  Serial.println(s);
+  Serial.println(p);
   
   WiFi.begin(ssidChar, passChar);
   Serial.println("");
@@ -397,7 +407,8 @@ void dataSend(String d) {
   char f2[f1.length()];
   f1.toCharArray(f2, f1.length() + 1);
   Serial.print(f1);
-
+  
+  connectAWSIoT();
   mqttClient.publish(pubTopic, f2);
 }
 
@@ -465,17 +476,21 @@ void setup(void) {
   if (validSSID(ssidWifi) == false) {
     deviceConfig();
   }
-
-  connectAWSIoT();
 }
 
 void loop(void) {
-  if (digitalRead(MemResetPin) == 0) {
+  if (digitalRead(MemResetPin) == 1) {
+    Serial.println("1");
     memClear(ssidWifi, passwordWifi);       //Overwrite the ESP Flash where SSID and Password is stored 
+    Serial.println("2");
     ESP.restart();                          //Restart the ESP
+    Serial.println("3");
   }
+  Serial.println("4");
   String data = ICRequestData();            //Sets data to the data sent from the NS7000
+  Serial.println("5");
   Serial.println(data);
+  Serial.println("6");
   Serial.println(ssidWifi);
   Serial.println(passwordWifi);
   if (data.charAt(15) == 255) {             //Check if the ending byte is correct therefore confirming the data is atleast structured correct
