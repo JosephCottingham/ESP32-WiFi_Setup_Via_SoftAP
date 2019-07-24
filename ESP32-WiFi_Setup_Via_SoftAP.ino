@@ -56,21 +56,25 @@
 #include <ESPSoftwareSerial.h>
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
+#include <DNSServer.h>
 
 #ifndef APSSID
-#define APSSID "H2O-WiFi-Unit"
+#define APSSID "H2O-"
 #define APPSK  ""
 #endif
 
+const byte DNS_PORT = 53;
+IPAddress apIP(192, 168, 4, 1);
+DNSServer dnsServer;
 WebServer server(80);
-WiFiClient tcpClient;
-SoftwareSerial ESPserial(17, 16);
-WiFiClientSecure httpsClient;
-PubSubClient mqttClient(httpsClient);
+SoftwareSerial ESPserial(16, 17);
+WiFiClientSecure TLSClient;
+PubSubClient mqttClient(TLSClient);
 
 void connectAWSIoT();
 void mqttCallback (char* topic, byte* payload, unsigned int length);
 
+const int ser = 16;
 const int port = 8883;
 const char *endpoint = "a3jmxo5vrdefm0-ats.iot.us-east-2.amazonaws.com";
 char *pubTopic = "Heartbeat";
@@ -147,7 +151,7 @@ const char* privateKey = "-----BEGIN RSA PRIVATE KEY-----\n" \
 
 const char ip[] = "10.1.10.253";
 const char url[] = "ioth2o.com";
-const String APssid = APSSID;
+String APssid = APSSID;
 const String APpassword = "";
 String UnHtmlForm = "";
 int MemResetPin = 13;
@@ -169,7 +173,6 @@ String memRead(int l, int p) {
       } else temp += String(char(EEPROM.read(n)));
 
     } else n = l + p;
-
   }
   return temp;
 }
@@ -324,8 +327,9 @@ void softAPConnect() {
   char APpasswordChar[APpassword.length()+1];
   APssid.toCharArray(APssidChar, APssid.length()+1);
   APpassword.toCharArray(APpasswordChar, APpassword.length()+1);
-  
+  WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
   WiFi.softAP(APssidChar, APpasswordChar);
+  dnsServer.start(DNS_PORT, "*", apIP);
   Serial.println("");
   Serial.print("Hosting: ");
   Serial.println(APssid);
@@ -370,26 +374,27 @@ boolean wifiConnect(String s, String p) {
  
 String ICRequestData() {
   ESPserial.begin(9600);                  //starts the serial com line between the ESP and the NS7000 (9600 baudrate)
-  ESPserial.write(65);                    //value taht the Pic is waiting to see before sending the data.
   Serial.println("\nWrite");
   byte bytesRead = 0;
   byte data[16];
-  delay(100);
+
   noInterrupts();                         //Disable and other process that may negtavilty affect the abilty to read. 
+  ESPserial.write(65);                    //value taht the Pic is waiting to see before sending the data.
+  delay(100);
   while (ESPserial.available() > 0) {
     data[bytesRead] = ESPserial.read();
     bytesRead++;
   }
   interrupts();                         //Reenable the interrupt operations as the timesinsitivity of operatios as decreased. 
-
+  ESPserial.end();
+  
   for (int a = 0; a < 16; a++) {
     Serial.print(data[a], DEC);
     if (a != 15) {
       Serial.print("~");
     }
   }
-  Serial.println("\n");
-  ESPserial.end();                        //Closing of the serial com line between the esp and the ns7000 in an attepmt to lower power draw
+  Serial.println("\n");                        //Closing of the serial com line between the esp and the ns7000 in an attepmt to lower power draw
   return String((char *)data);
 }
 
@@ -399,17 +404,17 @@ void dataSend(String d) {
   JsonArray& rxpk = root.createNestedArray("rxpk");
   JsonObject& data = rxpk.createNestedObject();
   data["data"] = d;
-
+ 
   WiFi.printDiag(Serial);
 
-  String f1 = "";
-  root.printTo(f1);
-  char f2[f1.length()];
-  f1.toCharArray(f2, f1.length() + 1);
-  Serial.print(f1);
+  String temp1 = "";
+  root.printTo(temp1);
+  char temp2[temp1.length()];
+  temp1.toCharArray(temp2, temp1.length() + 1);
+  Serial.print(temp1);
   
   connectAWSIoT();
-  mqttClient.publish(pubTopic, f2);
+  mqttClient.publish(pubTopic, temp2);
 }
 
 void connectAWSIoT() {
@@ -419,8 +424,8 @@ void connectAWSIoT() {
         } else {
             Serial.print("Failed. Error state=");
             Serial.print(mqttClient.state());
-            // Wait 5 seconds before retrying
-            delay(5000);
+            // Wait 1 seconds before retrying
+            delay(1000);
         }
     }
 }
@@ -441,14 +446,14 @@ void mqttCallback (char* topic, byte* payload, unsigned int length) {
 
 void deviceConfig() {
   //WiFi.forceSleepWake();
-  delay(1);
   WiFi.mode( WIFI_STA );
   form = htmlForm();                      //holds webpage html
   networkSearchPrint();
   softAPConnect();                        //sets up a WiFi AP
   while (handleSubmit()) {
-    delay(25);
     server.handleClient();
+    delay(25);
+    dnsServer.processNextRequest();
   }
   Serial.println("Setup Complete");
   WiFi.mode( WIFI_OFF );                    //Disable the network part of the esp to allow lower power consumption
@@ -458,6 +463,7 @@ void deviceConfig() {
 
 void setup(void) {
   WiFi.mode( WIFI_OFF );
+  APssid += ser;
   //WiFi.forceSleepBegin();
   delay(1);
   Serial.begin(115200);
@@ -467,9 +473,9 @@ void setup(void) {
   passwordWifi = memRead(30, 110);
   
   // Configure MQTT Client
-  httpsClient.setCACert(rootCA);
-  httpsClient.setCertificate(certificate);
-  httpsClient.setPrivateKey(privateKey);
+  TLSClient.setCACert(rootCA);
+  TLSClient.setCertificate(certificate);
+  TLSClient.setPrivateKey(privateKey);
   mqttClient.setServer(endpoint, port);
   mqttClient.setCallback(mqttCallback);
     
@@ -479,12 +485,12 @@ void setup(void) {
 }
 
 void loop(void) {
-  if (digitalRead(MemResetPin) == 1) {
+  if (digitalRead(MemResetPin) == HIGH) {
     Serial.println("1");
     memClear(ssidWifi, passwordWifi);       //Overwrite the ESP Flash where SSID and Password is stored 
     Serial.println("2");
     ESP.restart();                          //Restart the ESP
-    Serial.println("3");
+    Serial.println("3");        
   }
   Serial.println("4");
   String data = ICRequestData();            //Sets data to the data sent from the NS7000
@@ -503,7 +509,7 @@ void loop(void) {
     }
     WiFi.mode( WIFI_OFF );                  //disable wifi config
     //WiFi.forceSleepBegin();                 //put networking capibilites of the esp to sleep
-    delay(1);
+    delay(100);
   }
   else {
     Serial.println("Data Collect Fail or Network Connection Failure");
