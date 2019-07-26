@@ -1,3 +1,24 @@
+const char* certificate = "-----BEGIN CERTIFICATE-----\n" \
+"MIIDWjCCAkKgAwIBAgIVAOSBIDNhxZ/c6kQyJn/yjm/2txy7MA0GCSqGSIb3DQEB\n"
+"CwUAME0xSzBJBgNVBAsMQkFtYXpvbiBXZWIgU2VydmljZXMgTz1BbWF6b24uY29t\n"
+"IEluYy4gTD1TZWF0dGxlIFNUPVdhc2hpbmd0b24gQz1VUzAeFw0xOTA2MjYxODMw\n"
+"MTZaFw00OTEyMzEyMzU5NTlaMB4xHDAaBgNVBAMME0FXUyBJb1QgQ2VydGlmaWNh\n"
+"dGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCmM5B/oLbYyf7zZQOf\n"
+"M8Nk3nEDUCf041LJfwlo1AaILctHSaKiILibnJDv9t9bQHqBFIAv7CKV2MFhp9FH\n"
+"HQYVNTIR/MDStqwL0qFdb6qM7Px6tsYz8bknBeBdn93cTyI4kaa+cUp3GfYtYxtH\n"
+"ybTTZtMVgxZOiDgPe5pR8TSr4NAD3zu6IPb3RPaH6R9yWIgGuJpOKFEmnYnZXBeO\n"
+"Z8GfJYOuwuUCel7I5r0vNajG4e8CsqS/LjnQYBxuNYjZ+IRbqcMd7VXGAsyzc/i6\n"
+"t0mAK5QW0bW+bI/8rCSZ7QJzCPGrL5JCWpc0JfaeWrbD4oqTEylWWvW2IiSD8kea\n"
+"0QBtAgMBAAGjYDBeMB8GA1UdIwQYMBaAFCu1E7oWbF9lqVrjhtrPuUqICjk5MB0G\n"
+"A1UdDgQWBBQWrsJgdTba/gsp7Aw9+I7EOVXn1TAMBgNVHRMBAf8EAjAAMA4GA1Ud\n"
+"DwEB/wQEAwIHgDANBgkqhkiG9w0BAQsFAAOCAQEAOPeoKiROOf7tFF4s8HerMxEJ\n"
+"XdoiWCB1NwOX3Y0DUWDZ5JTbe3xouw6ANWiyFpDfY7UNLOoxVfLll97KsBTeLsRQ\n"
+"EjIZ7ZzyzNv/2zb1dDEsOkJ8piN1eJLJQBiZhID7YoMJQytQSHR9a9M+nv0sE5vE\n"
+"HEWhIJ/1c7FrLjJjZhm2MySbIbGmmi1hrOt0sp+/rh/coxSu0xkHNJVu2XBKAFYo\n"
+"1lNk8E+6uZdpwVmvCpWq3Og5zBFtLxSXo6U+HNNjZ4Uk7J+O77n5yp26Fc8Ee8Bi\n"
+"79tODcSf76pUyhz1/zmhR08voacZSyL/ijuMkBHicJpKtJDeklubukKyMQ5EMg==\n"
+"-----END CERTIFICATE-----\n";
+
 /****************************************************************
 '*  Name    : ESP8266-Wifi_Setup_Via_SoftAP.INO                 *
 '*  Author  : Joseph Cottingham and Ethan Reiland               *
@@ -52,7 +73,7 @@
 #include <WiFiClient.h>
 #include <WebServer.h>
 #include <EEPROM.h>
-#include <WiFiUdp.h>
+//#include <WiFiUdp.h>
 #include <ESPSoftwareSerial.h>
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
@@ -100,26 +121,6 @@ const char* rootCA = "-----BEGIN CERTIFICATE-----\n" \
 "rqXRfboQnoZsG4q5WTP468SQvvG5\n"
 "-----END CERTIFICATE-----\n";
 
-const char* certificate = "-----BEGIN CERTIFICATE-----\n" \
-"MIIDWjCCAkKgAwIBAgIVAOSBIDNhxZ/c6kQyJn/yjm/2txy7MA0GCSqGSIb3DQEB\n"
-"CwUAME0xSzBJBgNVBAsMQkFtYXpvbiBXZWIgU2VydmljZXMgTz1BbWF6b24uY29t\n"
-"IEluYy4gTD1TZWF0dGxlIFNUPVdhc2hpbmd0b24gQz1VUzAeFw0xOTA2MjYxODMw\n"
-"MTZaFw00OTEyMzEyMzU5NTlaMB4xHDAaBgNVBAMME0FXUyBJb1QgQ2VydGlmaWNh\n"
-"dGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCmM5B/oLbYyf7zZQOf\n"
-"M8Nk3nEDUCf041LJfwlo1AaILctHSaKiILibnJDv9t9bQHqBFIAv7CKV2MFhp9FH\n"
-"HQYVNTIR/MDStqwL0qFdb6qM7Px6tsYz8bknBeBdn93cTyI4kaa+cUp3GfYtYxtH\n"
-"ybTTZtMVgxZOiDgPe5pR8TSr4NAD3zu6IPb3RPaH6R9yWIgGuJpOKFEmnYnZXBeO\n"
-"Z8GfJYOuwuUCel7I5r0vNajG4e8CsqS/LjnQYBxuNYjZ+IRbqcMd7VXGAsyzc/i6\n"
-"t0mAK5QW0bW+bI/8rCSZ7QJzCPGrL5JCWpc0JfaeWrbD4oqTEylWWvW2IiSD8kea\n"
-"0QBtAgMBAAGjYDBeMB8GA1UdIwQYMBaAFCu1E7oWbF9lqVrjhtrPuUqICjk5MB0G\n"
-"A1UdDgQWBBQWrsJgdTba/gsp7Aw9+I7EOVXn1TAMBgNVHRMBAf8EAjAAMA4GA1Ud\n"
-"DwEB/wQEAwIHgDANBgkqhkiG9w0BAQsFAAOCAQEAOPeoKiROOf7tFF4s8HerMxEJ\n"
-"XdoiWCB1NwOX3Y0DUWDZ5JTbe3xouw6ANWiyFpDfY7UNLOoxVfLll97KsBTeLsRQ\n"
-"EjIZ7ZzyzNv/2zb1dDEsOkJ8piN1eJLJQBiZhID7YoMJQytQSHR9a9M+nv0sE5vE\n"
-"HEWhIJ/1c7FrLjJjZhm2MySbIbGmmi1hrOt0sp+/rh/coxSu0xkHNJVu2XBKAFYo\n"
-"1lNk8E+6uZdpwVmvCpWq3Og5zBFtLxSXo6U+HNNjZ4Uk7J+O77n5yp26Fc8Ee8Bi\n"
-"79tODcSf76pUyhz1/zmhR08voacZSyL/ijuMkBHicJpKtJDeklubukKyMQ5EMg==\n"
-"-----END CERTIFICATE-----\n";
 
 const char* privateKey = "-----BEGIN RSA PRIVATE KEY-----\n" \
 "MIIEowIBAAKCAQEApjOQf6C22Mn+82UDnzPDZN5xA1An9ONSyX8JaNQGiC3LR0mi\n"
@@ -471,7 +472,8 @@ void setup(void) {
   pinMode(MemResetPin, INPUT);
   ssidWifi = memRead(30, 10);
   passwordWifi = memRead(30, 110);
-  
+//  char FUCKYOU[16] = &certificate;
+  Serial.printf("FUCK YOU <3 %pn \n",&certificate);
   // Configure MQTT Client
   TLSClient.setCACert(rootCA);
   TLSClient.setCertificate(certificate);
