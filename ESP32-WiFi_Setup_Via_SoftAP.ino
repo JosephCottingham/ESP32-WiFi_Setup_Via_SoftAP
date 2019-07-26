@@ -3,7 +3,7 @@
 '*  Author  : Joseph Cottingham and Ethan Reiland               *
 '*  Notice  : Copyright (c) 2019                                *
 '*          : All Rights Reserved                               *
-'*  Date    : 6/27/2019                                         *
+'*  Date    : 7/26/2019                                         *
 '*  Version : 1.0                                               *
 '*  Notes   :                                                   *
 '*          :                                                   *
@@ -15,16 +15,14 @@
 '* **************IMPORTANT CONSIDERATIONS FOR THE ESP8266************************************
 '*          :                                                                               *
 '*********************************************************************************************************************************** 
-'*          :  Arduino Programmer Settings for ESP8266 Plugin                                                                      *
-'*          :  Oscillator Frequency: 26 MHz                                                                                        *
-'*          :  CPU Frequency: 80 MHz                                                                                               *
-'*          :  Flash Size: 2M (128K SPIFFS)                                                                                        *
+'*          :  Arduino Programmer Settings for ESP32 Plugin                                                                        *
+'*          :  CPU Frequency: 240 MHz                                                                                              *
+'*          :  Flash Size: 4MB (1.5MB SPIFFS)                                                                                      *
 '*          :  Upload Baud: 115200                                                                                                 *
-'*          :  Restart Meathod: ck                                                                                                 *
-'*          :  Flash Mode: DOUT                                                                                                    *
-'*          :  Flash Frequency: 40MHz                                                                                              *
+'*          :  Flash Mode: QIO                                                                                                     *
+'*          :  Flash Frequency: 80MHz                                                                                              *
 '*          :  VTables: Flash                                                                                                      *
-'*          :  Board: Generic ESP8266  Module                                                                                      *
+'*          :  Board: ESP32 Dev  Module                                                                                            *
 '***********************************************************************************************************************************                                                                                                    
 '*                                          *     
 '******************************************************************************************************************
